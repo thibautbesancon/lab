@@ -1,6 +1,7 @@
 # coding:utf-8
 import multiprocessing
 import time
+import argparse
 
 ##Hola, no pude usar tus fotos.
 ##De hecho, sus imágenes están en formato ANSI. 
@@ -100,20 +101,44 @@ def process_blue(header, body):
     f.close()
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description="Abrir y leer un documento")
+    parser.add_argument("-r", "--red", default=1, help="Escala para rojo")
+    parser.add_argument("-g", "--green", default=1, help=" Escala para verde")
+    parser.add_argument("-b", "--blue", default=1, help="Escala para azul")
+    parser.add_argument("-s", "--size", default=1024, help="Bloque de lectura")
+    parser.add_argument("-f", "--file", default="image.ppm", help="Archivo a procesar")
+    
+    args = parser.parse_args()
+
+    if args.red < 0 or args.blue < 0 or args.green < 0:
+        print("El color no puede tener un valor negativo")
+        sys.exit()
+    if args.size < 0:
+        print("El tamaño de los datos no puede ser negativo")
+        sys.exit()
+    try:
+        doc = open(args.file, "rb")
+
+    except FileNotFoundError:
+        print("El documento no está en la carpeta")
+        sys.exit()
+
     ##Take a filename ppm and cut the header and the body
-    header, body = takeppm("image.ppm")
+    header, body = takeppm(args.file)
 
     ##Creation of  the 3 process in different processor
-    prB = multiprocessing.Process(target=process_blue(header, body))
-    prR = multiprocessing.Process(target=process_red(header, body))
-    prG = multiprocessing.Process(target=process_green(header, body))
+    if args.blue == 1:
+        prB = multiprocessing.Process(target=process_blue(header, body))
+    if args.red == 1:
+        prR = multiprocessing.Process(target=process_red(header, body))
+    if args.green == 1:
+        prG = multiprocessing.Process(target=process_green(header, body))
+   
 
     ##Start the process 
-    print("bluestart")
     prB.start()
-    print("redstart")
     prR.start()
-    print("greenstart")
     prG.start()
 
     ##wait all proccessor to finish
